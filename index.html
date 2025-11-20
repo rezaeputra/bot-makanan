@@ -103,14 +103,22 @@ function backToLogin() {
 
 /* ---------- API Caller ---------- */
 
-async function apiCall(body) {
+async function apiCall(action, payload) {
   const res = await fetch(API_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body)
+    headers: {
+      "Content-Type": "text/plain"
+    },
+    body: JSON.stringify({
+      action,
+      ...payload
+    }),
+    mode: "cors"
   });
-  return res.json();
+
+  return await res.json();
 }
+
 
 /* ---------- LOGIN ---------- */
 
