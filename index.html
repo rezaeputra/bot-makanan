@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aplikasi Pencatat Kalori</title>
+
+  <!-- Anda bisa pakai CSS sendiri atau Tailwind -->
+  <style>
+    body { font-family: Arial; background: #f2f2f2; padding: 20px; }
+    .app-container { max-width: 450px; margin: auto; background: white; padding: 20px; border-radius: 10px; }
+    .input-group { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; }
+    input, textarea { width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ddd; }
+    button { width: 100%; padding: 10px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    button:disabled { opacity: 0.6; }
+    .message { margin-top: 10px; padding: 10px; border-radius: 5px; }
+    .success { background: #c8f7c5; }
+    .error { background: #f7c5c5; }
+    .expired { background: #ffe6b3; }
+  </style>
+</head>
+
+<body>
+
+<div class="app-container">
+  
+  <!-- AUTH SECTION -->
+  <div id="auth-section">
+    <h2>Aplikasi Pencatat Kalori</h2>
+    
+    <div id="auth-message" class="message" style="display: none;"></div>
+
+    <div class="input-group">
+      <label for="waId">Nomor WhatsApp (cth: 62812...)</label>
+      <input type="number" id="waId" placeholder="Tanpa + atau 0 depan" required>
+    </div>
+    
+    <div class="input-group">
+      <label for="name">Nama Lengkap (untuk pendaftaran)</label>
+      <input type="text" id="name" placeholder="Nama Anda">
+    </div>
+    
+    <button onclick="handleLogin()">Login</button>
+    <button onclick="handleRegister()" style="margin-top: 10px;">Daftar</button>
+  </div>
+  
+  <!-- DASHBOARD SECTION -->
+  <div id="dashboard-section" style="display: none;">
+    <h2>Selamat Datang, <span id="user-name"></span>!</h2>
+    
+    <div id="dashboard-message" class="message" style="display: none;"></div>
+
+    <div class="input-group">
+      <label for="food-input">Catat Makanan</label>
+      <textarea id="food-input" rows="3" placeholder="Nasi 1 piring, ayam goreng 1 potong"></textarea>
+    </div>
+    
+    <button id="log-btn" onclick="logFood()">Catat Makanan</button>
+    
+    <div class="dashboard">
+      <h3>Ringkasan Harian</h3>
+      <div id="today-total-summary" class="summary-box">
+        <p style="text-align:center;color:#888;">Memuat total...</p>
+      </div>
+
+      <button onclick="logout()" style="margin-top:20px; background:#dc3545;">Logout</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+
+const API_URL = "https://script.google.com/macros/s/AKfycbyNu3EBSQkWagm0ioUKUI-Oj-CiGSBoFnCPek7BR5tds3sysgbE1CShoah4Krv8KDQl6A/exec";
+
+let currentUserId = null;
+let currentUserName = null;
+
+/* ---------- Helper UI ---------- */
+
+function showMessage(id, status, text) {
+  const div = document.getElementById(id);
+  div.className = `message ${status}`;
+  div.textContent = text;
+  div.style.display = "block";
+}
+
+function hideMessage(id) {
+  document.getElementById(id).style.display = "none";
+}
+
+function showDashboard() {
+  document.getElementById("auth-section").style.display = "none";
+  document.getElementById("dashboard-section").style.display = "block";
+  document.getElementById("user-name").textContent = currentUserName;
+}
+
+function backToLogin() {
+  document.getElementById("auth-section").style.display = "block";
+  document.getElementById("dashboard-section").style.display = "none";
+}
+
+/* ---------- API Caller ---------- */
+
+async function apiCall(body) {
+  const res = await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  return res.json();
+}
+
+/* ---------- LOGIN ---------- */
+
+async function handleLogin() {
+  hideMessage("auth-message");
+  
+  const id = document.getElementById("waId").value.trim();
+  if (!id) return showMessage("auth-message", "error", "Nomor WA wajib diisi.");
+
+  const data = await apiCall({
+    action: "login",
+    userId: id
+  });
+
+  if (data.status === "success") {
+    currentUserId = id;
+    currentUserName = data.user.name;
+    showDashboard();
+  } 
+  else if (data.status === "expired") {
+    showMessage("auth-message", "expired", data.message);
+  } 
+  else {
+    showMessage("auth-message", "error", data.message);
+  }
+}
+
+/* ---------- REGISTER ---------- */
+
+async function handleRegister() {
+  hideMessage("auth-message");
+
+  const id = document.getElementById("waId").value.trim();
+  const name = document.getElementById("name").value.trim();
+
+  if (!id || !name) {
+    return showMessage("auth-message", "error", "Nomor WA dan Nama wajib diisi.");
+  }
+
+  const data = await apiCall({
+    action: "register",
+    formData: { id, name }
+  });
+
+  showMessage("auth-message", data.status, data.message);
+}
+
+/* ---------- CATAT MAKANAN ---------- */
+
+async function logFood() {
+  showMessage("dashboard-message", "success", "🚧 Fitur log makanan belum dihubungkan.");
+}
+
+/* ---------- LOGOUT ---------- */
+
+function logout() {
+  currentUserId = null;
+  currentUserName = null;
+  backToLogin();
+}
+
+</script>
+</body>
+</html>
