@@ -106,9 +106,6 @@ function backToLogin() {
 async function apiCall(action, payload) {
   const res = await fetch(API_URL, {
     method: "POST",
-    headers: {
-      "Content-Type": "text/plain"
-    },
     body: JSON.stringify({
       action,
       ...payload
